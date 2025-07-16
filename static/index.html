@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trivia Leaderboard</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Chicago Trivia Leaderboard</h1>
+  </header>
+  <main>
+    <section class="top-teams">
+      <h2>Top Teams</h2>
+        <ul id="team-ranking-container">
+          <div id="team-ranking"></div> <!-- changed to div -->
+        </ul>
+      <section class="team-details" id="team-details-container">
+        <div id="team-details"></div> <!-- wrapper div for fade -->
+      </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Summer Party</p>
+  </footer>
+
+<script>
+function crossfadeContent(targetId, newHtml) {
+  const container = document.getElementById(targetId);
+  const cards = container.querySelectorAll('.team-ranking');
+
+  // Fade out existing cards
+  cards.forEach(card => card.classList.add('fade-out'));
+
+  // Wait for fade, then swap content
+  setTimeout(() => {
+    container.innerHTML = newHtml;
+
+    // Fade in new cards
+    const newCards = container.querySelectorAll('.team-details');
+    newCards.forEach(card => {
+      card.classList.add('fade-out');
+      requestAnimationFrame(() => {
+        card.classList.remove('fade-out');
+      });
+    });
+  }, 400);
+}
+
+
+
+  async function fetchLeaderboard() {
+    console.log("Refreshing leaderboard..."); // 👈 Add this line
+    const res = await fetch('/api/leaderboard');
+    const data = await res.json();
+
+    // Build HTML strings
+    const rankingHtml = data.map((team, index) => {
+      return `<li>${index + 1}. ${team.name} (${team.total_score} pts)</li>`;
+    }).join('');
+
+    const detailsHtml = data.map((team) => {
+      const stations = team.stations.map(s => `
+        <div class="station ${s.status}">
+          <span class="station-name">${s.station}</span>
+          <span class="station-score">${s.score ?? '-'} pts</span>
+        </div>
+      `).join('');
+
+      return `
+        <div class="team-card">
+          <h3>${team.name}</h3>
+          <div class="station-row">
+            ${stations}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    crossfadeContent('team-ranking', rankingHtml);
+    crossfadeContent('team-details', detailsHtml);
+  }
+
+  fetchLeaderboard();
+  setInterval(fetchLeaderboard, 5000);
+</script>
+
+</body>
+</html>
