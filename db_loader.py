@@ -3,12 +3,15 @@ from sqlalchemy import create_engine, MetaData, Table, text
 from sqlalchemy.dialects.postgresql import insert
 from config import DB_URL
 
-def load_data_to_db(df: pd.DataFrame, table_name: str, schema: str = "public", unique_key: str = "Submission ID"):
+def load_data_to_db(df: pd.DataFrame, table_name: str, schema: str = "trivia", unique_key: str = "Submission ID"):
     """Upserts data into a Postgres table, creating or altering it as needed."""
     engine = create_engine(DB_URL)
     metadata = MetaData(schema=schema)
 
     with engine.connect() as conn:
+        # Set default schema for this session
+        conn.execute(text(f"SET search_path TO {schema}"))
+        
         # Ensure schema exists
         conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema}"))
 

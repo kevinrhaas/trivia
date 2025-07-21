@@ -17,6 +17,7 @@ def get_index():
 @app.get("/api/leaderboard")
 def get_leaderboard():
     with engine.connect() as conn:
+        conn.execute(text("SET search_path TO trivia"))
         # Get scores by team + station
         station_scores = conn.execute(text("""
             SELECT
@@ -32,8 +33,12 @@ def get_leaderboard():
                 SELECT "Submission ID", "Team Name" FROM station2_chicagohistory
                 UNION
                 SELECT "Submission ID", "Team Name" FROM station3_damare
+                UNION 
+                SELECT "Submission ID", "Team Name" FROM station4_signs
                 UNION
-                SELECT "Submission ID", "Team Name" FROM station5_oddsandends
+                SELECT  "Submission ID", "Team Name" FROM station5_oddsandends
+                UNION
+                SELECT  "Submission ID", "Team Name" FROM station6_musicvenues
                 -- add more as needed
             ) tm ON sr.submission_id = tm.submission_id
         """)).fetchall()

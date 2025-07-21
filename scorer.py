@@ -11,6 +11,8 @@ def score_station_answers(table_name: str, schema: str = "public"):
     print(f"🧠 Scoring answers for: {table_name}")
 
     with engine.connect() as conn:
+        conn.execute(text("SET search_path TO trivia"))
+
         # Get metadata for this station
         station = table_name
         meta = conn.execute(text("""
@@ -81,7 +83,7 @@ Correct Answer: {correct_answer}
 
 Submitted Answer: {submitted_answer}
 
-Decide if the submitted answer is correct (even if phrased differently). Then explain your decision in one sentence.
+Decide if the submitted answer is correct (even if phrased or spelled differently, be generous). Then explain your decision in one brief sentence.
 
 Respond in this format:
 Score: Yes or No
