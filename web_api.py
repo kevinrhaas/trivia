@@ -8,11 +8,11 @@ app = FastAPI()
 engine = create_engine(DB_URL)
 
 # Serve static HTML + CSS
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static-v2")
 
 @app.get("/")
 def get_index():
-    return FileResponse("static/index.html")
+    return FileResponse("static/index-v2.html")
 
 @app.get("/api/leaderboard")
 def get_leaderboard():
@@ -25,50 +25,85 @@ def get_leaderboard():
                 sr.submission_id,
                 sr.question,
                 sr.score,
-                tm.team_name
+                tm.team_name,
+                tm.station_num
             FROM scoring_results sr
             JOIN (
-                SELECT "Submission ID" AS submission_id, "Team Name" AS team_name FROM station1_filmedinchicago
+                SELECT '1' as station_num, "Submission ID" AS submission_id, "Team Name" AS team_name FROM station1_filmedinchicago
                 UNION
-                SELECT "Submission ID", "Team Name" FROM station2_chicagohistory
+                SELECT '2' as station_num, "Submission ID", "Team Name" FROM station2_chicagohistory
                 UNION
-                SELECT "Submission ID", "Team Name" FROM station3_damare
+                SELECT '3' as station_num, "Submission ID", "Team Name" FROM station3_damare
                 UNION 
-                SELECT "Submission ID", "Team Name" FROM station4_signs
+                SELECT '4' as station_num, "Submission ID", "Team Name" FROM station4_signs
                 UNION
-                SELECT  "Submission ID", "Team Name" FROM station5_oddsandends
+                SELECT  '5' as station_num, "Submission ID", "Team Name" FROM station5_oddsandends
                 UNION
-                SELECT  "Submission ID", "Team Name" FROM station6_musicvenues
+                SELECT  '6' as station_num, "Submission ID", "Team Name" FROM station6_musicvenues
                 -- add more as needed
             ) tm ON sr.submission_id = tm.submission_id
         """)).fetchall()
+
+        # 👇 INSERT HERE: Pull scoring metadata to calculate max_points per station
+        metadata_rows = conn.execute(text("""
+            SELECT station, question, score_type, max_points
+            FROM question_metadata
+        """)).fetchall()
+
+        from collections import defaultdict
+        station_max_points = defaultdict(int)
+
+        for row in metadata_rows:
+            station = row.station
+            score_type = row.score_type or 'S'
+            if score_type == 'P':
+                station_max_points[station] += row.max_points or 0
+            else:
+                station_max_points[station] += 1
+
+
 
         # Group by team and station
         leaderboard = {}
         for row in station_scores:
             team = row.team_name
             station = row.station
-            correct = row.score
+        
+            score = float(row.score or 0.0)            
 
             if team not in leaderboard:
-                leaderboard[team] = {"total_score": 0, "stations": {}}
+                leaderboard[team] = {"total_score": 0.0, "stations": {}}
 
             if station not in leaderboard[team]["stations"]:
-                leaderboard[team]["stations"][station] = 0
+                leaderboard[team]["stations"][station] = 0.0
 
-            leaderboard[team]["stations"][station] += int(correct)
+        
+            leaderboard[team]["stations"][station] += score
+            leaderboard[team]["total_score"] += score
 
-            if correct:
-                leaderboard[team]["total_score"] += 1
+        station_number_map = {
+            'station1_filmedinchicago': 1,
+            'station2_chicagohistory': 2,
+            'station3_damare': 3,
+            'station4_signs': 4,
+            'station5_oddsandends': 5,
+            'station6_musicvenues': 6,
+        }
 
-        # Convert to JSON structure
+
         result = []
         for team, data in leaderboard.items():
             result.append({
                 "name": team,
                 "total_score": data["total_score"],
                 "stations": [
-                    {"station": station, "score": score, "status": "complete"}
+                    {
+                        "station": station,
+                        "score": score,
+                        "status": "complete",
+                        "station_num": station_number_map.get(station, None),
+                        "max_points": station_max_points.get(station, 10)  # fallback to 10 if undefined
+                    }
                     for station, score in data["stations"].items()
                 ]
             })

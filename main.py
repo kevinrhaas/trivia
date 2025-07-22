@@ -20,7 +20,7 @@ def run_sync_loop():
                     continue
                 # Clean sheet name to use as table name (e.g. no spaces or punctuation)
                 table_name = sheet_name.strip().lower().replace(" ", "_").replace("-", "_")
-                load_data_to_db(df, table_name=table_name, schema="public", unique_key="Submission ID")
+                load_data_to_db(df, table_name=table_name, schema="trivia", unique_key="Submission ID")
                 print(f"✅ Data loaded for {table_name}, moving to scoring...")
                 score_station_answers(table_name=table_name)
                 
