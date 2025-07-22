@@ -8,11 +8,11 @@ app = FastAPI()
 engine = create_engine(DB_URL)
 
 # Serve static HTML + CSS
-app.mount("/static", StaticFiles(directory="static"), name="static-v2")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def get_index():
-    return FileResponse("static/index-v2.html")
+    return FileResponse("static/index.html")
 
 @app.get("/api/leaderboard")
 def get_leaderboard():

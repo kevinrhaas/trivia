@@ -3,87 +3,113 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trivia Leaderboard</title>
+  <title>Chicago Trivia Leaderboard</title>
   <link rel="stylesheet" href="/static/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header>
+  <header class="party-header">
     <h1>Chicago Trivia Leaderboard</h1>
+    <p class="subheading-note">Unofficial Results</p>
   </header>
-  <main>
-    <section class="top-teams">
-      <h2>Top Teams</h2>
-        <ul id="team-ranking-container">
-          <div id="team-ranking"></div> <!-- changed to div -->
-        </ul>
-      <section class="team-details" id="team-details-container">
-        <div id="team-details"></div> <!-- wrapper div for fade -->
-      </section>
-  </main>
 
-  <footer>
-    <p>&copy; 2025 Summer Party</p>
+  <div class="page-content">
+    <main>
+      <section class="leaderboard">
+        <div id="leaderboard-container"></div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="party-footer">
+    <p>2025 Summer Party</p>
   </footer>
 
+
 <script>
-function crossfadeContent(targetId, newHtml) {
-  const container = document.getElementById(targetId);
-  const cards = container.querySelectorAll('.team-ranking');
+const categoryColors = {
+  1: "#D96C6C",  // red
+  2: "#E49B3D",  // orange
+  3: "#E9D985",  // yellow
+  4: "#6DB88D",  // green
+  5: "#7BA6E6",  // blue
+  6: "#A689D1"   // violet
+};
 
-  // Fade out existing cards
-  cards.forEach(card => card.classList.add('fade-out'));
+function createStackedBar(stations) {
+  const maxScore = 10;
+  const totalCategories = 6;
 
-  // Wait for fade, then swap content
-  setTimeout(() => {
-    container.innerHTML = newHtml;
+  // Create a map from station_num → score
+  const stationMap = {};
+  stations.forEach(s => {
+    if (s.station_num) {
+      stationMap[s.station_num] = s;
+    }
+  });
 
-    // Fade in new cards
-    const newCards = container.querySelectorAll('.team-details');
-    newCards.forEach(card => {
-      card.classList.add('fade-out');
-      requestAnimationFrame(() => {
-        card.classList.remove('fade-out');
-      });
-    });
-  }, 400);
+  let currentTotal = 0;
+  let completedCount = 0;
+
+  // Build the bar in order from 1 to 6
+  const barSegments = [];
+  for (let i = 1; i <= totalCategories; i++) {
+    const s = stationMap[i];
+    if (s && s.score > 0) {
+      const percent = (s.score / maxScore) * 100;
+      const color = categoryColors[i] || "#999";
+      currentTotal += s.score;
+      completedCount++;
+
+      barSegments.push(`
+        <div class="bar-segment" style="flex: 1; background-color: ${color}; --fill-height: ${100 - percent}%">
+            <span class="bar-label">
+              ${s.score} / ${s.max_points}<br>
+              <small>Station ${i}</small>
+            </span>
+        </div>
+      `);
+
+    }
+  }
+
+  const barWidthPercent = (completedCount / totalCategories) * 100;
+
+  return `
+    <div class="bar-wrapper">
+      <div class="bar-container" style="width: ${barWidthPercent}%">
+        ${barSegments.join('')}
+      </div>
+    </div>
+  `;
 }
 
 
 
-  async function fetchLeaderboard() {
-    console.log("Refreshing leaderboard..."); // 👈 Add this line
-    const res = await fetch('/api/leaderboard');
-    const data = await res.json();
 
-    // Build HTML strings
-    const rankingHtml = data.map((team, index) => {
-      return `<li>${index + 1}. ${team.name} (${team.total_score} pts)</li>`;
-    }).join('');
+async function fetchLeaderboard() {
+  const res = await fetch('/api/leaderboard');
+  const data = await res.json();
 
-    const detailsHtml = data.map((team) => {
-      const stations = team.stations.map(s => `
-        <div class="station ${s.status}">
-          <span class="station-name">${s.station}</span>
-          <span class="station-score">${s.score ?? '-'} pts</span>
-        </div>
-      `).join('');
+  const html = data.map((team, index) => {
+    const barHtml = createStackedBar(team.stations);
+    return `
+      <div class="team-block">
+        <h2 class="team-heading">
+          <span class="team-rank">#${index + 1}</span>
+          <span class="team-name">${team.name}</span>
+          <span class="team-score">${team.total_score}</span>
+        </h2>
+        ${barHtml}
+      </div>
+    `;
+  }).join('');
 
-      return `
-        <div class="team-card">
-          <h3>${team.name}</h3>
-          <div class="station-row">
-            ${stations}
-          </div>
-        </div>
-      `;
-    }).join('');
+  document.getElementById('leaderboard-container').innerHTML = html;
+}
 
-    crossfadeContent('team-ranking', rankingHtml);
-    crossfadeContent('team-details', detailsHtml);
-  }
-
-  fetchLeaderboard();
-  setInterval(fetchLeaderboard, 5000);
+fetchLeaderboard();
+setInterval(fetchLeaderboard, 10000);
 </script>
 
 </body>
