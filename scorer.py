@@ -8,6 +8,8 @@ openai.api_key = OPENAI_API_KEY
 engine = create_engine(DB_URL)
 
 def score_station_answers(table_name: str, schema: str = "trivia"):
+    import datetime
+    print(f"🕓 Scoring started at {datetime.datetime.now().strftime('%H:%M:%S')}")
     print(f"🧠 Scoring answers for: {table_name}")
 
     with engine.connect() as conn:
@@ -70,6 +72,9 @@ def score_station_answers(table_name: str, schema: str = "trivia"):
                     "explanation": result["explanation"]
                 })
                 conn.commit()
+                conn.execute(text("UPDATE trivia.app_status SET last_score = NOW() WHERE id = 1"))
+                conn.commit()
+
 
 
 def already_scored(conn):

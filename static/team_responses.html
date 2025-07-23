@@ -1,0 +1,47 @@
+<head>
+  <link rel="stylesheet" href="/static/team_responses.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <div class="content">
+    <h1>Team Responses</h1>
+    <label for="team-picker">Select a Team:</label>
+    <select id="team-picker"></select>
+    <div id="responses"></div>
+  </div>
+</body>
+
+<script>
+async function loadTeams() {
+  const res = await fetch('/api/teams');
+  const teams = await res.json();
+  const select = document.getElementById('team-picker');
+  teams.forEach(team => {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = team;
+    select.appendChild(opt);
+  });
+  select.addEventListener('change', loadResponses);
+}
+
+async function loadResponses() {
+  const team = document.getElementById('team-picker').value;
+  const res = await fetch(`/api/team_responses?team=${encodeURIComponent(team)}`);
+  const data = await res.json();
+  const container = document.getElementById('responses');
+  container.innerHTML = data.map(item => `
+  <div class="response-card">
+    <h4>${item.station} — ${item.question}</h4>
+    <p><strong>Question:</strong> ${item.question_text}</p>
+    <p><strong>Correct Answer:</strong> ${item.correct_answer}</p>
+    <p><strong>Team Answer:</strong> ${item.team_answer}</p>
+    <p><strong>Explanation:</strong> ${item.explanation}</p>
+    <p><strong>Score:</strong> ${item.score}</p>
+  </div>
+`).join('');
+
+}
+
+loadTeams();
+</script>

@@ -55,7 +55,7 @@ function createStackedBar(stations) {
   const barSegments = [];
   for (let i = 1; i <= totalCategories; i++) {
     const s = stationMap[i];
-    if (s && s.score > 0) {
+    if (s && s.max_points !== undefined) {
       const percent = (s.score / maxScore) * 100;
       const color = categoryColors[i] || "#999";
       currentTotal += s.score;
@@ -111,6 +111,33 @@ async function fetchLeaderboard() {
 fetchLeaderboard();
 setInterval(fetchLeaderboard, 10000);
 </script>
+<div id="status-footer" class="status-footer"></div>
+<script>
+  async function fetchStatusFooter() {
+  const apiHost = window.location.hostname;
+  const res = await fetch(`http://${apiHost}:5000/api/status`);
 
+  const data = await res.json();
+  console.log("📥 Status data:", data);
+
+  const formatTime = (iso) => {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    return d.toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+
+  const html = `Last Scored: ${formatTime(data.last_scored)} · Last run: ${formatTime(data.last_run)}`;
+  document.getElementById('status-footer').innerText = html;
+}
+
+
+  fetchStatusFooter();
+  setInterval(fetchStatusFooter, 10000);
+</script>
 </body>
 </html>

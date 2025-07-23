@@ -3,6 +3,7 @@
   --apricot: #FBCEB1;
   --mustard: #fff4c2;
   --accent-navy: #2c3e50;
+  --dark-green: #1a6b40;
   --card-shadow: 0 4px 10px rgba(0,0,0,0.08);
   --segment-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
@@ -17,10 +18,25 @@ body {
 }
 
 h1 {
-  font-size: 2.5rem;
-  margin: 0.5rem 0;
+  font-size: 3rem; /* preserve mobile sizing */
+  font-weight: 700;
+  color: var(--mustard); /* brighter mustard tone */
+
+  /* subtle metallic texturing effect via layered shadows */
+  text-shadow:
+    1px 1px 0px #C79C3B,   /* warm golden brown base */
+    2px 2px 4px rgba(0, 0, 0, 0.3); /* soft dark shadow for depth */
+
+  letter-spacing: 1.5px;
   text-align: center;
-  color: honeydew;
+  margin-bottom: 0.25rem;
+}
+
+
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@700&display=swap');
+
+h1 {
+  font-family: 'Raleway', sans-serif;
 }
 
 .party-footer {
@@ -29,7 +45,7 @@ h1 {
   padding: .5rem;
   font-weight: 600;
   font-size: 1rem;
-  color: var(--accent-navy);
+  color: var(--dark-green);
   box-shadow: 0 -1px 4px rgba(0,0,0,0.05);
 }
 
@@ -115,13 +131,14 @@ main {
 .bar-segment::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   width: 100%;
   background: rgba(255, 255, 255, 0.4);
-  height: calc(100% - var(--fill-height, 0%));
+  height: var(--fill-height, 0%);
   transition: height 0.3s ease;
 }
+
 
 .bar-label {
   z-index: 1;
@@ -210,4 +227,11 @@ main {
   text-align: center;
   font-style: italic;
   letter-spacing: 0.3px;
+}
+
+.status-footer {
+  font-size: 0.65rem;
+  color: #d5d5d5;
+  text-align: right;
+  padding: 0.25rem 1rem;
 }

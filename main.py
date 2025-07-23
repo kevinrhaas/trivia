@@ -1,13 +1,19 @@
 import time
+
+from sqlalchemy import create_engine
 from sheet_reader import get_sheet_data
 from db_loader import load_data_to_db
-from config import SYNC_INTERVAL, SHEET_NAMES
+from config import SYNC_INTERVAL, SHEET_NAMES, DB_URL  # ⬅️ add DB_URL here
+
 
 from scorer import score_station_answers
 
 def run_sync_loop():
     print("📡 Starting Google Sheets → PostgreSQL sync...")
     while True:
+        from sqlalchemy import create_engine, text
+        engine = create_engine(DB_URL)
+        
         for sheet_name in SHEET_NAMES:
             try:
                 print(f"🔄 Syncing: {sheet_name}")
@@ -28,7 +34,10 @@ def run_sync_loop():
                 import traceback
                 print(f"❌ Failed to sync '{sheet_name}': {e}")
                 traceback.print_exc()
-
+        
+        with engine.connect() as conn:
+            conn.execute(text("UPDATE trivia.app_status SET last_run = NOW() WHERE id = 1"))
+            conn.commit()
         print(f"⏳ Waiting {SYNC_INTERVAL} seconds...\n")
         time.sleep(SYNC_INTERVAL)
 
