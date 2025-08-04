@@ -40,7 +40,6 @@ function createStackedBar(stations) {
   const maxScore = 10;
   const totalCategories = 6;
 
-  // Create a map from station_num → score
   const stationMap = {};
   stations.forEach(s => {
     if (s.station_num) {
@@ -48,11 +47,19 @@ function createStackedBar(stations) {
     }
   });
 
+  const stationNames = {
+    1: "1-Movies",
+    2: "2-History",
+    3: "3-DaMare",
+    4: "4-Signs",
+    5: "5-Odds&Ends",
+    6: "6-Venues"
+  };
+
   let currentTotal = 0;
   let completedCount = 0;
-
-  // Build the bar in order from 1 to 6
   const barSegments = [];
+
   for (let i = 1; i <= totalCategories; i++) {
     const s = stationMap[i];
     if (s && s.max_points !== undefined) {
@@ -65,11 +72,10 @@ function createStackedBar(stations) {
         <div class="bar-segment" style="flex: 1; background-color: ${color}; --fill-height: ${100 - percent}%">
             <span class="bar-label">
               ${s.score} / ${s.max_points}<br>
-              <small>Station ${i}</small>
+              <small>${stationNames[i]}</small>
             </span>
         </div>
       `);
-
     }
   }
 
@@ -83,6 +89,7 @@ function createStackedBar(stations) {
     </div>
   `;
 }
+
 
 
 

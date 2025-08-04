@@ -12,4 +12,4 @@ DB_URL = os.getenv("DB_URL")
 # Configuration for the Google Sheets API and other trivia settings
 GOOGLE_SHEET_NAME = "2025 Trivia"
 SHEET_NAMES = ["station1_filmedinchicago", "station2_chicagohistory", "station3_damare","station4_signs","station5_oddsandends","station6_musicvenues"]
-SYNC_INTERVAL = 10  # seconds
+SYNC_INTERVAL = 30  # seconds
